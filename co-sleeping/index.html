@@ -22,34 +22,58 @@ box-shadow:0 4px 20px rgba(0,0,0,0.1);
 input,select{ width:100%; margin-bottom:6px; }
 
 #canvas-container{ width:100vw; height:100vh; }
+
+.panel-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+}
+
+#toggle-text {
+    font-size:12px;
+    background:#eee;
+    padding:2px 8px;
+    border-radius:10px;
+}
+
+.collapsed #ui-content {
+    display:none;
+}
+
 </style>
 </head>
 
 <body>
 
 <div id="ui-panel">
-<h3>💕添い寝(同衾)シミュレーター</h3>
+    <div class="panel-header" onclick="togglePanel()">
+        <h3 style="margin:0;">💓添い寝シミュレーター</h3>
+        <span id="toggle-text">閉じる</span>
+    </div>
 
-<b>A</b>
-<input id="nameA" placeholder="名前">
-<select id="genderA">
-<option value="male">男</option>
-<option value="female">女</option>
-</select>
-<input id="heightA" type="number" value="158">
-<input id="colorA" type="color" value="#ffcc99">
+    <div id="ui-content">
+        <b>A</b>
+        <input id="nameA">
+        <select id="genderA">
+            <option value="male">男</option>
+            <option value="female">女</option>
+        </select>
+        <input id="heightA" type="number" value="158">
+        <input id="colorA" type="color" value="#ffcc99">
 
-<b>B</b>
-<input id="nameB" placeholder="名前">
-<select id="genderB">
-<option value="male">男</option>
-<option value="female">女</option>
-</select>
-<input id="heightB" type="number" value="171">
-<input id="colorB" type="color" value="#ffad60">
+        <b>B</b>
+        <input id="nameB">
+        <select id="genderB">
+            <option value="male">男</option>
+            <option value="female">女</option>
+        </select>
+        <input id="heightB" type="number" value="171">
+        <input id="colorB" type="color" value="#ffad60">
 
-<b>添い寝距離</b>
-<input id="distance" type="range" min="0.1" max="2" step="0.01" value="0.6" oninput="updateScene()">
+        <b>添い寝距離</b>
+        <input id="distance" type="range" min="0.1" max="2" step="0.01" value="0.6" oninput="updateScene()">
+    </div>
 </div>
 
 <div id="canvas-container"></div>
@@ -68,7 +92,7 @@ scene.background = new THREE.Color(0xffffff);
 
 camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight,0.01,100);
 
-// 👇 真上固定カメラ
+// 真上固定カメラ
 camera.position.set(0,5,0);
 camera.lookAt(0,0,0);
 
@@ -83,6 +107,17 @@ group = new THREE.Group();
 scene.add(group);
 
 window.updateScene = updateScene;
+
+window.togglePanel = function(){
+    const panel = document.getElementById('ui-panel');
+    const text = document.getElementById('toggle-text');
+
+    panel.classList.toggle('collapsed');
+
+    text.innerText = panel.classList.contains('collapsed')
+        ? '開く'
+        : '閉じる';
+};
 
 updateScene();
 animate();
