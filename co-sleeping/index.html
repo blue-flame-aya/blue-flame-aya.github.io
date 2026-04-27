@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐤💕添い寝(同衾)シミュレーター</title>
+
+<style>
+:root { --panel-width: 300px; }
+body { margin: 0; overflow: hidden; font-family: sans-serif; }
+
+#ui-panel{
+position:absolute; top:10px; left:10px;
+width:var(--panel-width);
+background:#fff;
+padding:12px;
+border-radius:12px;
+z-index:100;
+box-shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+
+input,select{ width:100%; margin-bottom:6px; }
+
+#canvas-container{ width:100vw; height:100vh; }
+</style>
+</head>
+
+<body>
+
+<div id="ui-panel">
+<h3>🐤💕添い寝(同衾)シミュレーター</h3>
+
+<b>A</b>
+<input id="nameA" placeholder="名前">
+<select id="genderA">
+<option value="male">男</option>
+<option value="female">女</option>
+</select>
+<input id="heightA" type="number" value="158">
+<input id="colorA" type="color" value="#ffcc99">
+
+<b>B</b>
+<input id="nameB" placeholder="名前">
+<select id="genderB">
+<option value="male">男</option>
+<option value="female">女</option>
+</select>
+<input id="heightB" type="number" value="171">
+<input id="colorB" type="color" value="#ffad60">
+
+<b>添い寝距離</b>
+<input id="distance" type="range" min="0.1" max="2" step="0.01" value="0.6" oninput="updateScene()">
+</div>
+
+<div id="canvas-container"></div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+
+let scene, camera, renderer;
+let personA, personB, group;
+
+init();
+
+function init(){
+scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+
+camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight,0.01,100);
+
+// 👇 真上固定カメラ
+camera.position.set(0,5,0);
+camera.lookAt(0,0,0);
+
+renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+document.getElementById("canvas-container").appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x888888,2.5));
+
+group = new THREE.Group();
+scene.add(group);
+
+window.updateScene = updateScene;
+
+updateScene();
+animate();
+}
+
+function createMannequin(color, heightCm, gender, name, role){
+
+const group = new THREE.Group();
+const h = heightCm * 0.01;
+
+const mat = new THREE.MeshPhongMaterial({
+color: color,
+transparent:true,
+opacity:0.85
+});
+
+// --- 頭 ---
+const head = new THREE.Mesh(
+new THREE.SphereGeometry(h*0.13,16,16),
+mat
+);
+head.position.y = h*0.9;
+group.add(head);
+
+// --- 胴体 ---
+const torso = new THREE.Mesh(
+new THREE.BoxGeometry(h*0.22,h*0.4,h*0.12),
+mat
+);
+torso.position.y = h*0.55;
+group.add(torso);
+
+// --- 腕 ---
+group.arms = [];
+[-1,1].forEach(side=>{
+const arm = new THREE.Mesh(
+new THREE.BoxGeometry(h*0.06,h*0.35,h*0.06),
+mat
+);
+arm.position.set(side*h*0.2, h*0.65, 0);
+group.add(arm);
+group.arms.push(arm);
+});
+
+// --- 足 ---
+group.legs = [];
+[-1,1].forEach(side=>{
+const leg = new THREE.Mesh(
+new THREE.BoxGeometry(h*0.07,h*0.4,h*0.07),
+mat
+);
+leg.position.set(side*h*0.08, h*0.2, 0);
+group.add(leg);
+group.legs.push(leg);
+});
+
+// --- 名前ラベル ---
+const canvas = document.createElement('canvas');
+canvas.width = 512;
+canvas.height = 128;
+const ctx = canvas.getContext('2d');
+ctx.fillStyle="#333";
+ctx.font="bold 40px sans-serif";
+ctx.textAlign="center";
+ctx.fillText((name||role)+" ("+heightCm+"cm)",256,70);
+
+const sprite = new THREE.Sprite(
+new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas)})
+);
+sprite.scale.set(1.5,0.4,1);
+sprite.position.y = h + 0.3;
+group.add(sprite);
+
+group.userData = { height:h };
+
+return group;
+}
+
+function updateScene(){
+
+group.clear();
+
+const hA = parseFloat(heightA.value)||158;
+const hB = parseFloat(heightB.value)||171;
+
+personA = createMannequin(colorA.value,hA,genderA.value,nameA.value,'A');
+personB = createMannequin(colorB.value,hB,genderB.value,nameB.value,'B');
+
+// 横に寝かせる（ここが核心）
+personA.rotation.x = Math.PI/2;
+personB.rotation.x = Math.PI/2;
+
+// 向かい合わせにする
+personA.rotation.z = Math.PI;
+personB.rotation.z = Math.PI;
+
+// // 少しだけ体をずらす（肩が重ならないように）
+// personA.position.z = -0.05;
+// personB.position.z = 0.05;
+
+// // 顔の向きを少し寄せる（親密感UP）
+// personA.rotation.y = 0.2;
+// personB.rotation.y = -0.2;
+
+// 添い寝距離
+const d = parseFloat(distance.value)||0.6;
+
+personA.position.x = -d/2;
+personB.position.x = d/2;
+
+// 軽く腕を寄せる（添い寝っぽさ）
+personA.arms.forEach(a=> a.rotation.z = -0.5);
+personB.arms.forEach(a=> a.rotation.z = 0.5);
+
+group.add(personA);
+group.add(personB);
+}
+
+function animate(){
+requestAnimationFrame(animate);
+renderer.render(scene,camera);
+}
+
+</script>
+</body>
+</html>
