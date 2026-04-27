@@ -234,6 +234,17 @@ personB.arms.forEach(a=> a.rotation.z = 0.5);
 
 group.add(personA);
 group.add(personB);
+
+    const box = new THREE.Box3().setFromObject(group);
+
+    const minZ = box.min.z; // 足側
+    const maxZ = box.max.z; // 頭側
+
+    // 👇 頭から30%の位置
+    const targetZ = maxZ - (maxZ - minZ) * 0.3;
+
+    // 👇 それを画面中央へ
+    group.position.z -= targetZ;
 }
 
 function animate(){
