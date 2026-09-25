@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>🟦🔥界隈ソート</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Helvetica Neue",
+                "Hiragino Kaku Gothic ProN",
+                "Yu Gothic",
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e8f1ff 0%,
+                    #ffffff 45%,
+                    #fff1e8 100%
+                );
+
+            color: #222;
+        }
+
+        /* =========================
+           共通
+           ========================= */
+
+        .screen {
+            min-height: 100vh;
+
+            display: none;
+
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+
+            text-align: center;
+        }
+
+        /* =========================
+           スタート画面
+           ========================= */
+
+        #startScreen {
+            flex-direction: column;
+        }
+
+        .title {
+            margin: 0 0 40px;
+
+            font-size: clamp(40px, 8vw, 72px);
+            font-weight: 900;
+
+            letter-spacing: 0.03em;
+
+            color: #222;
+
+            text-shadow:
+                3px 3px 0 #fff,
+                6px 6px 0 rgba(0, 0, 0, 0.08);
+        }
+
+        .start-button,
+        .reset-button {
+            border: none;
+            border-radius: 999px;
+
+            padding: 18px 60px;
+
+            font-size: 22px;
+            font-weight: bold;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #147ef5,
+                    #635bff
+                );
+
+            cursor: pointer;
+
+            box-shadow:
+                0 8px 20px rgba(55, 100, 220, 0.25);
+
+            transition:
+                transform 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .start-button:hover,
+        .reset-button:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 12px 25px rgba(55, 100, 220, 0.35);
+        }
+
+        .start-button:active,
+        .reset-button:active {
+            transform: scale(0.96);
+        }
+
+        /* =========================
+           選択画面
+           ========================= */
+
+        #gameScreen {
+            flex-direction: column;
+        }
+
+        .game-header {
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .game-title {
+            margin: 0 0 8px;
+
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .round-text {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+
+            height: 8px;
+
+            margin: 15px auto 0;
+
+            background: #ddd;
+
+            border-radius: 999px;
+
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #147ef5,
+                    #ff5f6d
+                );
+
+            transition: width 0.3s ease;
+        }
+
+        .choices {
+            width: 100%;
+
+            display: flex;
+
+            justify-content: center;
+            align-items: stretch;
+
+            gap: 20px;
+        }
+
+        .choice-card {
+            position: relative;
+
+            width: 50%;
+            max-width: 360px;
+
+            padding: 20px;
+
+            background:
+                rgba(255, 255, 255, 0.9);
+
+            border-radius: 24px;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.10);
+
+            cursor: pointer;
+
+            transition:
+                transform 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-6px);
+
+            box-shadow:
+                0 15px 35px rgba(0, 0, 0, 0.16);
+        }
+
+        .choice-card:active {
+            transform: scale(0.96);
+        }
+
+        .choice-image {
+            display: block;
+
+            width: 100%;
+            aspect-ratio: 1 / 1;
+
+            object-fit: cover;
+
+            border-radius: 18px;
+
+            background: #eee;
+        }
+
+        .choice-name {
+            margin: 15px 0 0;
+
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: 800;
+
+            word-break: break-word;
+        }
+
+        .choice-label {
+            margin-top: 8px;
+
+            font-size: 14px;
+            color: #888;
+        }
+
+        .choice-card.selected {
+            animation:
+                selectedAnimation 0.4s ease;
+        }
+
+        @keyframes selectedAnimation {
+
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+                /* =========================
+           結果画面
+           ========================= */
+
+        #resultScreen {
+            flex-direction: column;
+        }
+
+        .result-title {
+            margin: 0 0 25px;
+
+            font-size: clamp(32px, 7vw, 52px);
+            font-weight: 900;
+        }
+
+        /*
+         * ランキング全体を中央に配置
+         */
+        .ranking {
+            width: 100%;
+            max-width: 650px;
+
+            margin: 0 auto 30px;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 10px;
+
+            /*
+             * 左右中央寄せ
+             */
+            align-items: center;
+        }
+
+        .ranking-item {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+
+            padding: 12px 16px;
+
+            background:
+                rgba(255, 255, 255, 0.95);
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 5px 15px rgba(0, 0, 0, 0.08);
+
+            animation:
+                rankingAppear 0.35s ease both;
+        }
+
+        @keyframes rankingAppear {
+
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rank {
+            width: 55px;
+
+            font-size: 24px;
+            font-weight: 900;
+
+            text-align: center;
+
+            flex-shrink: 0;
+        }
+
+        .ranking-image {
+            width: 60px;
+            height: 60px;
+
+            object-fit: cover;
+
+            border-radius: 50%;
+
+            margin-right: 15px;
+
+            flex-shrink: 0;
+        }
+
+        .ranking-name {
+            flex: 1;
+
+            text-align: left;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            word-break: break-word;
+        }
+
+        .score {
+            min-width: 70px;
+
+            font-size: 20px;
+            font-weight: 900;
+
+            text-align: right;
+
+            flex-shrink: 0;
+        }
+
+        .score-unit {
+            margin-left: 2px;
+
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        /*
+         * 1位
+         */
+        .ranking-item:first-child {
+            padding-top: 16px;
+            padding-bottom: 16px;
+
+            border: 3px solid #ffd700;
+
+            box-shadow:
+                0 8px 25px rgba(255, 190, 0, 0.25);
+        }
+
+        .ranking-item:first-child .rank {
+            font-size: 30px;
+        }
+
+        .ranking-item:first-child .ranking-image {
+            width: 70px;
+            height: 70px;
+        }
+
+        /* =========================
+           エラー表示
+           ========================= */
+
+        .error-message {
+            max-width: 600px;
+
+            margin: 20px auto;
+            padding: 20px;
+
+            background: #fff0f0;
+
+            border: 1px solid #ffaaaa;
+            border-radius: 15px;
+
+            color: #c00;
+
+            line-height: 1.7;
+        }
+
+        /* =========================
+           スマホ
+           ========================= */
+
+        @media (max-width: 600px) {
+
+            .screen {
+                padding: 15px;
+            }
+
+            .title {
+                margin-bottom: 30px;
+            }
+
+            .choices {
+                gap: 10px;
+            }
+
+            .choice-card {
+                padding: 10px;
+
+                border-radius: 18px;
+            }
+
+            .choice-image {
+                border-radius: 13px;
+            }
+
+            .choice-name {
+                margin-top: 10px;
+            }
+
+            .choice-label {
+                font-size: 12px;
+            }
+
+            .game-title {
+                font-size: 23px;
+            }
+
+            .ranking-item {
+                padding: 10px;
+            }
+
+            .rank {
+                width: 40px;
+                font-size: 20px;
+            }
+
+            .ranking-image {
+                width: 50px;
+                height: 50px;
+
+                margin-right: 10px;
+            }
+
+            .ranking-name {
+                font-size: 16px;
+            }
+
+            .score {
+                font-size: 17px;
+            }
+
+            .ranking-item:first-child
+            .ranking-image {
+                width: 60px;
+                height: 60px;
+            }
+
+            .reset-button {
+                padding: 15px 45px;
+
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <!-- =====================================
+         スタート画面
+         ===================================== -->
+
+    <section
+        id="startScreen"
+        class="screen active"
+    >
+
+        <div class="container">
+
+            <h1 class="title">
+                🟦🔥界隈ソート
+            </h1>
+
+            <button
+                id="startButton"
+                class="start-button"
+            >
+                スタート
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         ゲーム画面
+         ===================================== -->
+
+    <section
+        id="gameScreen"
+        class="screen"
+    >
+
+        <div class="container">
+
+            <div class="game-header">
+
+                <h2 class="game-title">
+                    どっちが好き？
+                </h2>
+
+                <div
+                    id="roundText"
+                    class="round-text"
+                >
+                </div>
+
+                <div class="progress-container">
+
+                    <div
+                        id="progressBar"
+                        class="progress-bar"
+                    >
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="choices">
+
+                <!-- 左側 -->
+
+                <div
+                    id="leftChoice"
+                    class="choice-card"
+                >
+
+                    <img
+                        id="leftImage"
+                        class="choice-image"
+                        src=""
+                        alt=""
+                    >
+
+                    <div
+                        id="leftName"
+                        class="choice-name"
+                    >
+                    </div>
+
+                    <div class="choice-label">
+                        TAPして選択
+                    </div>
+
+                </div>
+
+
+                <!-- 右側 -->
+
+                <div
+                    id="rightChoice"
+                    class="choice-card"
+                >
+
+                    <img
+                        id="rightImage"
+                        class="choice-image"
+                        src=""
+                        alt=""
+                    >
+
+                    <div
+                        id="rightName"
+                        class="choice-name"
+                    >
+                    </div>
+
+                    <div class="choice-label">
+                        TAPして選択
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         結果画面
+         ===================================== -->
+
+    <section
+        id="resultScreen"
+        class="screen"
+    >
+
+        <div class="container">
+
+            <h2 class="result-title">
+                🟦🔥界隈ソート<br/>🏆 結果発表
+            </h2>
+
+            <div
+                id="ranking"
+                class="ranking"
+            >
+            </div>
+
+            <button
+                id="resetButton"
+                class="reset-button"
+            >
+                もう一度遊ぶ
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <script>
+
+        /* =====================================
+           グローバル変数
+           ===================================== */
+
+        let users = [];
+
+        let totalRounds = 0;
+
+        let currentRound = 0;
+
+        let leftUser = null;
+
+        let rightUser = null;
+
+        let scores = {};
+
+        /*
+         * 今後の対戦カードを格納する配列。
+         *
+         * 例:
+         *
+         * [
+         *     [ユーザーA, ユーザーB],
+         *     [ユーザーC, ユーザーD],
+         *     ...
+         * ]
+         */
+        let matches = [];
+
+
+        /* =====================================
+           DOM
+           ===================================== */
+
+        const startScreen =
+            document.getElementById("startScreen");
+
+        const gameScreen =
+            document.getElementById("gameScreen");
+
+        const resultScreen =
+            document.getElementById("resultScreen");
+
+        const startButton =
+            document.getElementById("startButton");
+
+        const resetButton =
+            document.getElementById("resetButton");
+
+        const leftChoice =
+            document.getElementById("leftChoice");
+
+        const rightChoice =
+            document.getElementById("rightChoice");
+
+        const leftImage =
+            document.getElementById("leftImage");
+
+        const rightImage =
+            document.getElementById("rightImage");
+
+        const leftName =
+            document.getElementById("leftName");
+
+        const rightName =
+            document.getElementById("rightName");
+
+        const roundText =
+            document.getElementById("roundText");
+
+        const progressBar =
+            document.getElementById("progressBar");
+
+        const ranking =
+            document.getElementById("ranking");
+
+
+        /* =====================================
+           targets.json読み込み
+           ===================================== */
+
+        async function loadUsers() {
+
+            try {
+
+                const response =
+                    await fetch("targets.json");
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        `targets.jsonの読み込みに失敗しました。`
+                    );
+                }
+
+
+                users = await response.json();
+
+
+                // データ件数から試合回数を決定
+                totalRounds =
+                    users.length * 2;
+
+
+                // ユーザー数チェック
+                if (users.length < 2) {
+
+                    throw new Error(
+                        "ユーザーは2人以上必要です。"
+                    );
+                }
+
+
+                // 得点を初期化
+                initializeScores();
+
+
+            }
+            catch (error) {
+
+                console.error(error);
+
+                showError(
+                    "ユーザーデータを読み込めませんでした。<br>" +
+                    "index.htmlとtargets.jsonを同じフォルダに置いてください。"
+                );
+            }
+        }
+
+
+        /* =====================================
+           得点初期化
+           ===================================== */
+
+        function initializeScores() {
+
+            scores = {};
+
+            users.forEach(user => {
+
+                scores[user.name] = 0;
+
+            });
+        }
+
+
+        /* =====================================
+           配列シャッフル
+           ===================================== */
+
+        function shuffle(array) {
+
+            const result = [...array];
+
+            for (
+                let i = result.length - 1;
+                i > 0;
+                i--
+            ) {
+
+                const j =
+                    Math.floor(
+                        Math.random() * (i + 1)
+                    );
+
+                [
+                    result[i],
+                    result[j]
+                ] = [
+                    result[j],
+                    result[i]
+                ];
+            }
+
+            return result;
+        }
+
+
+        /* =====================================
+           対戦カード生成
+           ===================================== */
+
+        function createMatches() {
+
+            matches = [];
+
+
+            /*
+             * 試合回数は
+             *
+             *     ユーザー数 × 2
+             *
+             * 今回なら
+             *
+             *     6 × 2 = 12試合
+             *
+             * となる。
+             */
+            const numberOfMatches =
+                users.length * 2;
+
+
+            /*
+             * 各ユーザーが何回登場したか。
+             */
+            const appearanceCount = {};
+
+            users.forEach(user => {
+
+                appearanceCount[user.name] = 0;
+
+            });
+
+
+            /*
+             * 同じ組み合わせの登場回数。
+             *
+             * "A-B" と "B-A" を
+             * 同じ組み合わせとして扱う。
+             */
+            const pairCount = {};
+
+
+            /*
+             * 試合を1試合ずつ作る。
+             */
+            for (
+                let i = 0;
+                i < numberOfMatches;
+                i++
+            ) {
+
+                /*
+                 * 登場回数が少ない人を優先。
+                 */
+                const sortedUsers =
+                    shuffle(users)
+                        .sort(
+                            (a, b) =>
+                                appearanceCount[a.name]
+                                -
+                                appearanceCount[b.name]
+                        );
+
+
+                const firstUser =
+                    sortedUsers[0];
+
+
+                /*
+                 * 1人目とまだ対戦回数が少なく、
+                 * 自分自身ではない人を候補にする。
+                 */
+                const candidates =
+                    shuffle(users)
+                        .filter(user =>
+                            user.name !== firstUser.name
+                        )
+                        .sort((a, b) => {
+
+                            const pairA =
+                                getPairKey(
+                                    firstUser,
+                                    a
+                                );
+
+                            const pairB =
+                                getPairKey(
+                                    firstUser,
+                                    b
+                                );
+
+
+                            /*
+                             * まず同じ組み合わせを
+                             * 避ける。
+                             *
+                             * その次に登場回数が
+                             * 少ない人を優先する。
+                             */
+                            if (
+                                (pairCount[pairA] || 0)
+                                !==
+                                (pairCount[pairB] || 0)
+                            ) {
+
+                                return (
+                                    (pairCount[pairA] || 0)
+                                    -
+                                    (pairCount[pairB] || 0)
+                                );
+                            }
+
+
+                            return (
+                                appearanceCount[a.name]
+                                -
+                                appearanceCount[b.name]
+                            );
+                        });
+
+
+                const secondUser =
+                    candidates[0];
+
+
+                // 対戦カードを追加
+                matches.push([
+                    firstUser,
+                    secondUser
+                ]);
+
+
+                // 登場回数を更新
+                appearanceCount[
+                    firstUser.name
+                ]++;
+
+                appearanceCount[
+                    secondUser.name
+                ]++;
+
+
+                // 組み合わせ回数を更新
+                const pairKey =
+                    getPairKey(
+                        firstUser,
+                        secondUser
+                    );
+
+                pairCount[pairKey] =
+                    (pairCount[pairKey] || 0) + 1;
+            }
+
+
+            /*
+             * 対戦カード全体の順番を
+             * ランダム化する。
+             */
+            matches =
+                shuffle(matches);
+        }
+
+
+        /* =====================================
+           組み合わせキー
+           ===================================== */
+
+        function getPairKey(userA, userB) {
+
+            const names = [
+                userA.name,
+                userB.name
+            ].sort();
+
+            return names.join("__");
+        }
+
+
+        /* =====================================
+           ゲーム開始
+           ===================================== */
+
+        function startGame() {
+
+            if (users.length < 2) {
+                return;
+            }
+
+
+            currentRound = 0;
+
+            initializeScores();
+
+
+            /*
+             * 今回のゲーム用の対戦カードを生成。
+             */
+            createMatches();
+
+
+            showScreen(gameScreen);
+
+
+            nextRound();
+        }
+
+
+        /* =====================================
+           次の試合
+           ===================================== */
+
+        function nextRound() {
+
+            /*
+             * 全試合終了
+             */
+            if (
+                currentRound >=
+                totalRounds
+            ) {
+
+                showResult();
+
+                return;
+            }
+
+
+            /*
+             * 試合番号
+             */
+            const match =
+                matches[currentRound];
+
+
+            leftUser =
+                match[0];
+
+            rightUser =
+                match[1];
+
+
+            currentRound++;
+
+
+            /*
+             * 表示
+             */
+
+            leftImage.src =
+                leftUser.image;
+
+            leftImage.alt =
+                leftUser.name;
+
+            leftName.textContent =
+                leftUser.name;
+
+
+            rightImage.src =
+                rightUser.image;
+
+            rightImage.alt =
+                rightUser.name;
+
+            rightName.textContent =
+                rightUser.name;
+
+
+            /*
+             * ラウンド表示
+             */
+
+            roundText.textContent =
+                `${currentRound} / ${totalRounds}`;
+
+
+            /*
+             * プログレスバー
+             */
+
+            const progress =
+                (
+                    (currentRound - 1)
+                    /
+                    totalRounds
+                ) * 100;
+
+            progressBar.style.width =
+                `${progress}%`;
+
+
+            /*
+             * アニメーションリセット
+             */
+
+            leftChoice.classList.remove(
+                "selected"
+            );
+
+            rightChoice.classList.remove(
+                "selected"
+            );
+        }
+
+
+        /* =====================================
+           ユーザー選択
+           ===================================== */
+
+        function selectUser(
+            selectedUser,
+            selectedCard
+        ) {
+
+            /*
+             * 二重クリック防止
+             */
+            leftChoice.style.pointerEvents =
+                "none";
+
+            rightChoice.style.pointerEvents =
+                "none";
+
+
+            /*
+             * 選択されたユーザー
+             *
+             * +3
+             */
+            scores[
+                selectedUser.name
+            ] += 3;
+
+
+            /*
+             * 選択されなかったユーザー
+             *
+             * +1
+             */
+            const notSelectedUser =
+                selectedUser === leftUser
+                    ? rightUser
+                    : leftUser;
+
+
+            scores[
+                notSelectedUser.name
+            ] += 1;
+
+
+            /*
+             * 選択演出
+             */
+            selectedCard.classList.add(
+                "selected"
+            );
+
+
+            /*
+             * 少し待って次の試合へ
+             */
+            setTimeout(() => {
+
+                leftChoice.style.pointerEvents =
+                    "auto";
+
+                rightChoice.style.pointerEvents =
+                    "auto";
+
+                nextRound();
+
+            }, 350);
+        }
+
+
+        /* =====================================
+           結果表示
+           ===================================== */
+
+        function showResult() {
+
+            showScreen(resultScreen);
+
+
+            progressBar.style.width =
+                "100%";
+
+
+            /*
+             * 得点の高い順に並べる。
+             *
+             * 同点の場合はランダム。
+             */
+            // 得点の高い順に並べる。
+            // 同点の場合は元の順番を維持する。
+            const result =
+                [...users]
+                    .sort((a, b) =>
+                        scores[b.name] - scores[a.name]
+                    );
+
+
+            ranking.innerHTML = "";
+
+
+            /*
+            * 前のユーザーと同じ点数なら
+            * 同じ順位にする。
+            *
+            * 例：
+            *
+            * 20pt → 1位
+            * 20pt → 1位
+            * 18pt → 3位
+            * 15pt → 4位
+            * 15pt → 4位
+            * 10pt → 6位
+            */
+            let currentRank = 0;
+
+            let previousScore = null;
+
+
+            result.forEach((user, index) => {
+
+                const currentScore =
+                    scores[user.name];
+
+
+                /*
+                * 前の人と得点が違う場合だけ
+                * 順位を現在の表示位置に更新。
+                */
+                if (
+                    previousScore === null ||
+                    currentScore !== previousScore
+                ) {
+
+                    currentRank =
+                        index + 1;
+                }
+
+
+                previousScore =
+                    currentScore;
+
+
+                const item =
+                    document.createElement("div");
+
+                item.className =
+                    "ranking-item";
+
+                item.style.animationDelay =
+                    `${index * 0.08}s`;
+
+
+                /*
+                * 順位
+                */
+                const rank =
+                    document.createElement("div");
+
+                rank.className =
+                    "rank";
+
+
+                /*
+                * 1位だけトロフィー表示。
+                *
+                * 同率1位なら全員🥇になる。
+                */
+                if (currentRank === 1) {
+
+                    rank.textContent = "🥇";
+
+                }
+                else {
+
+                    rank.textContent =
+                        `${currentRank}位`;
+                }
+
+
+                /*
+                * アイコン
+                */
+                const image =
+                    document.createElement("img");
+
+                image.className =
+                    "ranking-image";
+
+                image.src =
+                    user.image;
+
+                image.alt =
+                    user.name;
+
+
+                /*
+                * ユーザー名
+                */
+                const name =
+                    document.createElement("div");
+
+                name.className =
+                    "ranking-name";
+
+                name.textContent =
+                    user.name;
+
+
+                /*
+                * 得点
+                */
+                const score =
+                    document.createElement("div");
+
+                score.className =
+                    "score";
+
+                score.textContent =
+                    currentScore;
+
+
+                const scoreUnit =
+                    document.createElement("span");
+
+                scoreUnit.className =
+                    "score-unit";
+
+                scoreUnit.textContent =
+                    "pt";
+
+
+                score.appendChild(
+                    scoreUnit
+                );
+
+
+                /*
+                * DOMに追加
+                */
+                item.appendChild(rank);
+                item.appendChild(image);
+                item.appendChild(name);
+                item.appendChild(score);
+
+                ranking.appendChild(item);
+
+            });
+        }
+
+
+        /* =====================================
+           リセット
+           ===================================== */
+
+        function resetGame() {
+
+            showScreen(startScreen);
+
+        }
+
+
+        /* =====================================
+           画面切り替え
+           ===================================== */
+
+        function showScreen(screen) {
+
+            startScreen.classList.remove(
+                "active"
+            );
+
+            gameScreen.classList.remove(
+                "active"
+            );
+
+            resultScreen.classList.remove(
+                "active"
+            );
+
+
+            screen.classList.add(
+                "active"
+            );
+        }
+
+
+        /* =====================================
+           エラー表示
+           ===================================== */
+
+        function showError(message) {
+
+            document.body.innerHTML = `
+                <div class="screen active">
+                    <div class="container">
+                        <div class="error-message">
+                            ${message}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        /* =====================================
+           イベント
+           ===================================== */
+
+        startButton.addEventListener(
+            "click",
+            startGame
+        );
+
+
+        resetButton.addEventListener(
+            "click",
+            resetGame
+        );
+
+
+        leftChoice.addEventListener(
+            "click",
+            () => {
+
+                selectUser(
+                    leftUser,
+                    leftChoice
+                );
+
+            }
+        );
+
+
+        rightChoice.addEventListener(
+            "click",
+            () => {
+
+                selectUser(
+                    rightUser,
+                    rightChoice
+                );
+
+            }
+        );
+
+
+        /* =====================================
+           初期処理
+           ===================================== */
+
+        loadUsers();
+
+    </script>
+
+</body>
+
+</html>
