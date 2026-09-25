@@ -1,5 +1,9 @@
 [
     {
+        "name": "レッツゴーザキヤマ",
+        "image": "https://pbs.twimg.com/profile_images/2070510367130755072/K--qVyxf_400x400.jpg"
+    },
+    {
         "name": "さのてゃ",
         "image": "https://pbs.twimg.com/profile_images/1998684806746615809/PdhBJ5jl_400x400.jpg"
     },
@@ -30,9 +34,5 @@
     {
         "name": "不ュ",
         "image": "https://pbs.twimg.com/profile_images/1802646661166141440/X0dYIxa3_400x400.jpg"
-    },
-    {
-        "name": "レッツゴーザキヤマ",
-        "image": "https://pbs.twimg.com/profile_images/2070510367130755072/K--qVyxf_400x400.jpg"
     }
 ]
